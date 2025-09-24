@@ -25,6 +25,12 @@ This document tracks the step-by-step development process for implementing the G
 - All parameters have sensible defaults
 - Obstacles specified as semicolon-separated coordinates
 
+### Verification Code
+
+```bash
+python -c "from app import parse_cli_args; print(parse_cli_args(['--rows','4','--cols','3','--start','0','0','--goal','3','2','--obstacles','1,1;2,0']))"
+```
+
 ---
 
 ## Step 2: Action Definition
@@ -37,6 +43,12 @@ This document tracks the step-by-step development process for implementing the G
 - Actions represent discrete movements in the grid
 - Each action has a corresponding (row, col) delta
 - Actions are deterministic but affected by slip probability
+
+### Verification Code
+
+```bash
+python -c "from app import get_actions; print(get_actions())"
+```
 
 ---
 
@@ -52,6 +64,12 @@ This document tracks the step-by-step development process for implementing the G
 - Obstacles are excluded from valid states
 - Start and goal positions must be valid states
 
+### Verification Code
+
+```bash
+python -c "from app import create_state_space; print(create_state_space(3,3,'1,1;2,0',(0,0),(2,2)))"
+```
+
 ---
 
 ## Step 4: Transition Model
@@ -65,6 +83,21 @@ This document tracks the step-by-step development process for implementing the G
 - Transition model accounts for slip probability
 - Boundary conditions prevent moving off the grid
 - Obstacle collisions result in staying in current state
+
+### Verification Code
+
+```python
+from app import create_state_space, get_actions, build_transition_model
+
+states, obs, start, goal = create_state_space(3,3,"1,1",(0,0),(2,2))
+actions = get_actions()
+trans = build_transition_model(states, actions, 3,3, slip_prob=0.2)
+
+# print transitions for (0,0) right
+print("transitions for (0,0):")
+for a, lst in trans[(0,0)].items():
+    print(a, lst)
+```
 
 ---
 
@@ -80,6 +113,16 @@ This document tracks the step-by-step development process for implementing the G
 - Obstacles provide negative reward (-1.0)
 - Normal moves have zero or small negative reward
 
+### Verification Code
+
+```python
+from app import get_reward
+
+print(get_reward((0,0),"right",(0,1),(0,4), {(1,1)}, 0.0, -1.0, 1.0))  # entering normal cell => 0
+print(get_reward((0,0),"right",(2,2),(2,2), {(1,1)}, 0.0, -1.0, 1.0))  # entering goal => 1
+print(get_reward((0,0),"right",(1,1),(2,2), {(1,1)}, 0.0, -1.0, 1.0))  # entering obstacle => -1
+```
+
 ---
 
 ## Step 6: Value Initialization
@@ -92,6 +135,17 @@ This document tracks the step-by-step development process for implementing the G
 - Value function typically initialized to zero
 - Goal state may have special initialization
 - Initial values affect convergence speed
+
+### Verification Code
+
+```python
+from app import create_state_space, initialize_values
+
+states, obs, start, goal = create_state_space(3,3,"",(0,0),(2,2))
+vals = initialize_values(states)
+
+print(len(vals), vals[(0,0)])
+```
 
 ---
 
@@ -107,6 +161,21 @@ This document tracks the step-by-step development process for implementing the G
 - Finds optimal action for given state
 - Returns both value and action
 
+### Verification Code
+
+```python
+from app import create_state_space, get_actions, build_transition_model, initialize_values, bellman_backup
+
+rows,cols=3,3
+states, obs, start, goal = create_state_space(rows,cols,"1,1",(0,0),(2,2))
+actions = get_actions()
+trans = build_transition_model(states, actions, rows, cols, slip_prob=0.0)
+values = initialize_values(states)
+
+# check backup for (1,0)
+print(bellman_backup((1,0), values, trans, goal, obs, 0.9))
+```
+
 ---
 
 ## Step 8: Value Iteration Algorithm
@@ -120,6 +189,25 @@ This document tracks the step-by-step development process for implementing the G
 - Algorithm continues until value changes are below threshold
 - Maximum iterations prevent infinite loops
 - Returns convergence information
+
+### Verification Code
+
+```python
+from app import create_state_space, get_actions, build_transition_model, value_iteration
+
+rows,cols=4,4
+states, obs, start, goal = create_state_space(rows,cols,"1,1;2,2",(0,0),(3,3))
+actions = get_actions()
+trans = build_transition_model(states, actions, rows, cols, slip_prob=0.1)
+values, iters, conv = value_iteration(states, actions, trans, goal, obs, gamma=0.9, theta=1e-4)
+
+print("iters:", iters, "converged:", conv)
+
+# print a few values
+for r in range(rows):
+    rowvals = [round(values[(r,c)], 3) for c in range(cols)]
+    print(rowvals)
+```
 
 ---
 
@@ -135,6 +223,21 @@ This document tracks the step-by-step development process for implementing the G
 - Ties in action values handled consistently
 - Policy should be deterministic
 
+### Verification Code
+
+```python
+from app import create_state_space, get_actions, build_transition_model, value_iteration, extract_policy
+
+rows,cols=5,5
+states, obs, start, goal = create_state_space(rows,cols,"1,1;2,2",(0,0),(4,4))
+actions = get_actions()
+trans = build_transition_model(states, actions, rows, cols)
+values, iters, conv = value_iteration(states, actions, trans, goal, obs)
+policy = extract_policy(states, actions, trans, values, goal, obs)
+
+print(policy[(0,0)], policy[(1,0)], policy[(3,3)])
+```
+
 ---
 
 ## Step 10: Visualization
@@ -149,6 +252,23 @@ This document tracks the step-by-step development process for implementing the G
 - Heatmap shows value function values
 - Policy visualization shows optimal actions
 - Files saved in specified output directory
+
+### Verification Code
+
+```python
+from app import create_state_space, get_actions, build_transition_model, value_iteration, extract_policy, visualize_grid
+
+rows,cols=6,6
+states, obs, start, goal = create_state_space(rows,cols,"1,1;2,4",(0,0),(5,5))
+actions = get_actions()
+trans = build_transition_model(states, actions, rows, cols, slip_prob=0.1)
+values, iters, conv = value_iteration(states, actions, trans, goal, obs, gamma=0.9, theta=1e-4)
+policy = extract_policy(states, actions, trans, values, goal, obs)
+
+visualize_grid(rows, cols, obs, start, goal, values, policy, out_dir="visuals")
+
+print("Saved visuals in ./visuals")
+```
 
 ---
 
@@ -166,6 +286,12 @@ This document tracks the step-by-step development process for implementing the G
 - Handles all command-line options
 - Provides comprehensive output
 - Integrates all previous components
+
+### Verification Code
+
+```bash
+python app.py --rows 6 --cols 6 --start 0 0 --goal 5 5 --obstacles "1,1;2,2;3,3" --slip 0.1 --gamma 0.9 --theta 1e-4 --visualize
+```
 
 ---
 
