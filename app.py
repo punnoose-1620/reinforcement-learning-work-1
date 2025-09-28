@@ -209,6 +209,11 @@ def visualize_grid(rows, cols, obstacles_set, start, goal, values, policy, out_d
             mat[r, c] = values.get((r, c), 0.0)
 
     fig, ax = plt.subplots(figsize=(cols * 0.6 + 1, rows * 0.6 + 1))
+    # Add value text in each cell
+    for r in range(rows):
+        for c in range(cols):
+            val = values.get((r, c), 0.0)
+            ax.text(c, r, f"{val:.2f}", ha="center", va="center", color="white" if abs(val) > 0.5 else "black", fontsize=10)
     im = ax.imshow(mat, origin="lower", interpolation="nearest")
     ax.set_title("Value function heatmap")
     plt.colorbar(im, ax=ax)
@@ -218,7 +223,7 @@ def visualize_grid(rows, cols, obstacles_set, start, goal, values, policy, out_d
         ax.add_patch(rect)
     # mark start and goal
     ax.scatter([start[1]], [start[0]], marker="*", s=150, label="start", facecolors="none", edgecolors="green", linewidths=2)
-    ax.scatter([goal[1]], [goal[0]], marker="o", s=120, label="goal", facecolors="none", edgecolors="red", linewidths=2)
+    ax.scatter([goal[1]], [goal[0]], marker="o", s=120, label="goal", facecolors="none", edgecolors="red", linewidths=2)    
     ax.legend(loc="upper right")
     plt.savefig(os.path.join(out_dir, "value_heatmap.png"), bbox_inches="tight")
     plt.close(fig)
@@ -240,6 +245,11 @@ def visualize_grid(rows, cols, obstacles_set, start, goal, values, policy, out_d
                 V[r, c] = dc
 
     fig, ax = plt.subplots(figsize=(cols * 0.6 + 1, rows * 0.6 + 1))
+    # Show value in each cell as text (like in the value heatmap)
+    for r in range(rows):
+        for c in range(cols):
+            val = values.get((r, c), 0.0)
+            ax.text(c, r, f"{val:.2f}", ha="center", va="center", color="white" if abs(val) > 0.5 else "black", fontsize=10)
     im = ax.imshow(mat, origin="lower", interpolation="nearest")
     # overlay obstacles again
     for (r, c) in obstacles_set:
