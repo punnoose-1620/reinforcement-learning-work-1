@@ -293,6 +293,22 @@ print("Saved visuals in ./visuals")
 python app.py --rows 6 --cols 6 --start 0 0 --goal 5 5 --obstacles "1,1;2,2;3,3" --slip 0.1 --gamma 0.9 --theta 1e-4 --visualize
 ```
 
+### CLI Result Matrix
+
+```
+ 0.299  0.334  0.435  0.488  0.546  0.605
+ 0.334  0.385  0.433  0.544  0.613  0.683
+ 0.435  0.433  0.501  0.563  0.688  0.771
+ 0.488  0.544  0.563  0.689  0.776  0.871
+ 0.546  0.613  0.688  0.776  0.876  0.984
+ 0.605  0.683  0.771  0.871  0.984  0.000
+```
+
+### Visualized Results
+
+![Value Heatmap](visuals/value_heatmap.png)
+![Policy Arrows](visuals/policy.png)
+
 ---
 
 ## Development Summary

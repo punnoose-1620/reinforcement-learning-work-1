@@ -123,11 +123,14 @@ The system generates two key visualizations:
    - Red/hot colors for high values (near goal)
    - Blue/cool colors for low values (far from goal)
    - Obstacles clearly marked
+   ![Value Heatmap](visuals/value_heatmap.png)
 
 2. **Policy Visualization** (`policy.png`):
    - Grid with arrows indicating optimal actions
    - Clear directional guidance from each state
    - Obstacles and goal state clearly marked
+   - Policy heatmap shown below:
+   ![Policy Heatmap](visuals/policy.png)
 
 ## Analysis
 
